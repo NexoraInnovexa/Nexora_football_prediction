@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import PredictionForm from "./components/App";  // Corrected import path to reflect your file structure
-import "./index.css";  // ✅ Ensure you have styles (optional)
+import PredictionForm from "./components/App.js";
+import "./index.css";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 

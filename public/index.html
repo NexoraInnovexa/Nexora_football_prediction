@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Football Prediction</title>
+    <script src="https://js.stripe.com/v3/"></script> <!-- ✅ Stripe Payment -->
+    <style>
+        /* ✅ General Page Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        input {
+            background-color: #f8f8f8;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .prediction {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>AI Football Prediction</h1>
+
+        <input type="email" id="email" placeholder="Your Email">
+        <input type="text" id="homeTeam" placeholder="Home Team">
+        <input type="text" id="awayTeam" placeholder="Away Team">
+
+        <button id="payBtn">Pay $4 & Get Prediction</button>
+
+        <div class="error" id="error"></div>
+
+        <div class="prediction" id="prediction" style="display: none;">
+            <h3>Prediction Result:</h3>
+            <p><strong id="home"></strong> vs <strong id="away"></strong></p>
+            <p>Predicted Score: <strong id="score"></strong></p>
+        </div>
+    </div>
+
+    <script>
+        const stripe = Stripe("pk_test_your_public_key"); // ✅ Replace with your actual Stripe public key
+        const payBtn = document.getElementById("payBtn");
+        const errorDiv = document.getElementById("error");
+        const predictionDiv = document.getElementById("prediction");
+
+        payBtn.addEventListener("click", async () => {
+            const email = document.getElementById("email").value;
+            const homeTeam = document.getElementById("homeTeam").value;
+            const awayTeam = document.getElementById("awayTeam").value;
+
+            if (!email || !homeTeam || !awayTeam) {
+                errorDiv.innerText = "⚠️ Please fill in all fields.";
+                return;
+            }
+
+            payBtn.disabled = true;
+            errorDiv.innerText = "";
+
+            try {
+                // ✅ Step 1: Create a Payment Intent (Backend API Call)
+                const paymentResponse = await fetch("http://localhost:5000/payment", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email })
+                });
+
+                const paymentResult = await paymentResponse.json();
+
+                if (!paymentResult.success) {
+                    throw new Error("Payment failed! Try again.");
+                }
+
+                // ✅ Step 2: Fetch AI Prediction
+                const predictionResponse = await fetch("http://localhost:5000/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam })
+                });
+
+                const predictionData = await predictionResponse.json();
+
+                // ✅ Show prediction result
+                document.getElementById("home").innerText = predictionData.home_team;
+                document.getElementById("away").innerText = predictionData.away_team;
+                document.getElementById("score").innerText = predictionData.predicted_score;
+                predictionDiv.style.display = "block";
+
+            } catch (err) {
+                errorDiv.innerText = "⚠️ " + err.message;
+                payBtn.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>

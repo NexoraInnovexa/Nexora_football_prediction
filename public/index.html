@@ -11,7 +11,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f1f1f1;
+            background-color: #f1f1f1; /* Set a default background color */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -20,7 +20,7 @@
         }
 
         .container {
-            background: #fff;
+            background: rgba(255, 255, 255, 0.8); /* Slight transparency for the container */
             padding: 30px;
             border-radius: 12px;
             width: 450px;
@@ -76,10 +76,10 @@
         .image-section {
             position: fixed;
             top: 0;
-            right: 0;
-            width: 40%;
+            left: 0; /* Position the image to the left */
+            width: 60%;
             height: 100vh;
-            background-image: url('./frontend/background.jpg');                                                     
+            background-image: url('./frontend/background-image.jpg'); /* Path to your image */
             background-size: cover;
             background-position: center;
             opacity: 0.7;
@@ -126,7 +126,7 @@
 </head>
 <body>
 
-    <div class="image-section"></div>
+    <div class="image-section"></div> <!-- Background image section -->
 
     <div class="container">
         <h1>AI Football Prediction</h1>

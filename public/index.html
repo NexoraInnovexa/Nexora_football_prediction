@@ -6,49 +6,52 @@
     <title>AI Football Prediction</title>
     <script src="https://checkout.flutterwave.com/v3.js"></script> <!-- ✅ Flutterwave Payment -->
     <style>
-        /* ✅ General Page Styling */
+        /* General Page Styling */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
+            padding: 0;
+            background-color: #f1f1f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
 
         .container {
             background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            width: 400px;
+            padding: 30px;
+            border-radius: 12px;
+            width: 450px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
         }
 
         h1 {
-            font-size: 22px;
-            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
         }
 
         input, button {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
             border: 1px solid #ccc;
             font-size: 16px;
-        }
-
-        input {
             background-color: #f8f8f8;
         }
 
         button {
-            background-color: #007bff;
+            background-color: #28a745;
             color: white;
-            border: none;
             cursor: pointer;
+            font-weight: bold;
         }
 
         button:disabled {
@@ -58,9 +61,9 @@
 
         .prediction {
             margin-top: 20px;
-            padding: 10px;
+            padding: 20px;
             background: #e9ecef;
-            border-radius: 5px;
+            border-radius: 8px;
             text-align: left;
         }
 
@@ -68,9 +71,62 @@
             color: red;
             margin-top: 10px;
         }
+
+        /* Image section */
+        .image-section {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 40%;
+            height: 100vh;
+            background-image: url('https://via.placeholder.com/600x800'); /* Replace with a footballer image */
+            background-size: cover;
+            background-position: center;
+            opacity: 0.7;
+            z-index: 1;
+        }
+
+        .services {
+            position: fixed;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .services h2 {
+            margin-bottom: 10px;
+        }
+
+        .services ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .services ul li {
+            margin: 10px 0;
+            cursor: pointer;
+            font-weight: bold;
+            color: #28a745;
+            transition: color 0.3s ease;
+        }
+
+        .services ul li:hover {
+            color: #ffffff;
+        }
+
     </style>
 </head>
 <body>
+
+    <div class="image-section"></div>
 
     <div class="container">
         <h1>AI Football Prediction</h1>
@@ -88,6 +144,16 @@
             <p><strong id="home"></strong> vs <strong id="away"></strong></p>
             <p>Predicted Score: <strong id="score"></strong></p>
         </div>
+    </div>
+
+    <div class="services">
+        <h2>Explore Other Services</h2>
+        <ul>
+            <li onclick="location.href='https://nexora.com/fake-news-detector'">Nexora Fake News Detector</li>
+            <li onclick="location.href='https://nexora.com/chatbot'">Nexora Chatbot</li>
+            <li onclick="location.href='https://nexora.com/image-to-video'">Nexora Image to Video</li>
+            <li onclick="location.href='https://nexora.com/text-to-video'">Nexora Text to Video</li>
+        </ul>
     </div>
 
     <script>
@@ -108,9 +174,9 @@
             payBtn.disabled = true;
             errorDiv.innerText = "";
 
-            // ✅ Step 1: Initialize Flutterwave Payment
+            // Initialize Flutterwave Payment
             FlutterwaveCheckout({
-                public_key: "FLWPUBK_TEST-72ca1dd35e632a21db39f59869e5dac2-X", // ✅ Replace with your Flutterwave public key
+                public_key: "FLWPUBK_TEST-72ca1dd35e632a21db39f59869e5dac2-X", // Replace with your Flutterwave public key
                 tx_ref: "TX-" + Date.now(),
                 amount: 4,
                 currency: "USD",
@@ -120,9 +186,9 @@
                 },
                 callback: async function(paymentResponse) {
                     if (paymentResponse.status === "successful") {
-                        // ✅ Step 2: After payment, request prediction
+                        // After payment, request prediction
                         try {
-                            const predictionResponse = await fetch("http://localhost:5000/predict", {
+                            const predictionResponse = await fetch("https://nexora-football-backend.onrender.com/predict", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam })
@@ -130,7 +196,7 @@
 
                             const predictionData = await predictionResponse.json();
 
-                            // ✅ Show prediction result
+                            // Show prediction result
                             document.getElementById("home").innerText = predictionData.home_team;
                             document.getElementById("away").innerText = predictionData.away_team;
                             document.getElementById("score").innerText = predictionData.predicted_score;

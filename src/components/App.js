@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements, useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 
-// ✅ Replace with your actual Stripe public key
-const stripePromise = loadStripe("pk_test_your_public_key");
+// Replace with your actual Flutterwave public key
+const FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK_TEST-72ca1dd35e632a21db39f59869e5dac2-X"; // Use your actual public key
 
 const PredictionForm = () => {
   const [email, setEmail] = useState("");
@@ -13,54 +11,46 @@ const PredictionForm = () => {
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const stripe = useStripe();
-  const elements = useElements();
 
-  // ✅ Handle Payment & Prediction Flow
+  // Handle Flutterwave Payment and Prediction Flow
   const handlePayment = async () => {
-    if (!stripe || !elements) return;
+    if (!email || !homeTeam || !awayTeam) {
+      setError("⚠️ Please fill in all fields.");
+      return;
+    }
 
     setError("");
     setLoading(true);
 
-    try {
-      // ✅ Step 1: Get Stripe Payment Method
-      const cardElement = elements.getElement(CardElement);
-      const { paymentMethod, error } = await stripe.createPaymentMethod({
-        type: "card",
-        card: cardElement
-      });
-
-      if (error) {
-        setError(error.message);
+    // Flutterwave payment initialization
+    FlutterwaveCheckout({
+      public_key: FLUTTERWAVE_PUBLIC_KEY,
+      tx_ref: "TX-" + Date.now(),
+      amount: 4,
+      currency: "USD",
+      payment_options: "card, ussd, banktransfer",
+      customer: {
+        email: email,
+      },
+      callback: async (paymentResponse) => {
+        if (paymentResponse.status === "successful") {
+          // After payment success, request prediction
+          handlePrediction();
+        } else {
+          setError("⚠️ Payment failed! Try again.");
+          setLoading(false);
+        }
+      },
+      onclose: function() {
         setLoading(false);
-        return;
       }
-
-      // ✅ Step 2: Process Payment
-      const paymentResponse = await axios.post("http://localhost:5000/payment", {
-        email,
-        payment_method_id: paymentMethod.id
-      });
-
-      if (!paymentResponse.data.success) {
-        setError("Payment failed. Try again.");
-        setLoading(false);
-        return;
-      }
-
-      // ✅ Step 3: Get AI Prediction After Payment Success
-      handlePrediction();
-    } catch (err) {
-      setError("Payment failed. Try again.");
-      setLoading(false);
-    }
+    });
   };
 
-  // ✅ Fetch AI Prediction
+  // Fetch AI Prediction
   const handlePrediction = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/predict", {
+      const response = await axios.post("https://nexora-football-backend.onrender.com/predict", {
         email,
         home_team: homeTeam,
         away_team: awayTeam
@@ -69,7 +59,7 @@ const PredictionForm = () => {
       setPrediction(response.data);
       setLoading(false);
     } catch (err) {
-      setError("Prediction failed. Try again.");
+      setError("⚠️ Prediction failed. Try again.");
       setLoading(false);
     }
   };
@@ -93,16 +83,13 @@ const PredictionForm = () => {
         value={awayTeam} onChange={(e) => setAwayTeam(e.target.value)} 
       />
 
-      <Elements stripe={stripePromise}>
-        <CardElement className="p-2 border mb-4" />
-        <button 
-          onClick={handlePayment} 
-          className="w-full p-2 bg-blue-500 text-white rounded"
-          disabled={loading}
-        >
-          {loading ? "Processing..." : "Pay $4 & Get Prediction"}
-        </button>
-      </Elements>
+      <button 
+        onClick={handlePayment} 
+        className="w-full p-2 bg-blue-500 text-white rounded"
+        disabled={loading}
+      >
+        {loading ? "Processing..." : "Pay $4 & Get Prediction"}
+      </button>
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
 

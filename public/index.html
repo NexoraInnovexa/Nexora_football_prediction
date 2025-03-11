@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Football Prediction</title>
-    <script src="https://js.stripe.com/v3/"></script> <!-- ✅ Stripe Payment -->
+    <script src="https://checkout.flutterwave.com/v3.js"></script> <!-- ✅ Flutterwave Payment -->
     <style>
         /* ✅ General Page Styling */
         body {
@@ -91,7 +91,6 @@
     </div>
 
     <script>
-        const stripe = Stripe("pk_test_your_public_key"); // ✅ Replace with your actual Stripe public key
         const payBtn = document.getElementById("payBtn");
         const errorDiv = document.getElementById("error");
         const predictionDiv = document.getElementById("prediction");
@@ -109,39 +108,46 @@
             payBtn.disabled = true;
             errorDiv.innerText = "";
 
-            try {
-                // ✅ Step 1: Create a Payment Intent (Backend API Call)
-                const paymentResponse = await fetch("http://localhost:5000/payment", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email })
-                });
+            // ✅ Step 1: Initialize Flutterwave Payment
+            FlutterwaveCheckout({
+                public_key: "FLWPUBK_TEST-72ca1dd35e632a21db39f59869e5dac2-X", // ✅ Replace with your Flutterwave public key
+                tx_ref: "TX-" + Date.now(),
+                amount: 4,
+                currency: "USD",
+                payment_options: "card, ussd, banktransfer",
+                customer: {
+                    email: email,
+                },
+                callback: async function(paymentResponse) {
+                    if (paymentResponse.status === "successful") {
+                        // ✅ Step 2: After payment, request prediction
+                        try {
+                            const predictionResponse = await fetch("http://localhost:5000/predict", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam })
+                            });
 
-                const paymentResult = await paymentResponse.json();
+                            const predictionData = await predictionResponse.json();
 
-                if (!paymentResult.success) {
-                    throw new Error("Payment failed! Try again.");
+                            // ✅ Show prediction result
+                            document.getElementById("home").innerText = predictionData.home_team;
+                            document.getElementById("away").innerText = predictionData.away_team;
+                            document.getElementById("score").innerText = predictionData.predicted_score;
+                            predictionDiv.style.display = "block";
+                        } catch (err) {
+                            errorDiv.innerText = "⚠️ Prediction failed. Try again.";
+                        }
+                    } else {
+                        errorDiv.innerText = "⚠️ Payment failed!";
+                    }
+
+                    payBtn.disabled = false;
+                },
+                onclose: function() {
+                    payBtn.disabled = false;
                 }
-
-                // ✅ Step 2: Fetch AI Prediction
-                const predictionResponse = await fetch("http://localhost:5000/predict", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam })
-                });
-
-                const predictionData = await predictionResponse.json();
-
-                // ✅ Show prediction result
-                document.getElementById("home").innerText = predictionData.home_team;
-                document.getElementById("away").innerText = predictionData.away_team;
-                document.getElementById("score").innerText = predictionData.predicted_score;
-                predictionDiv.style.display = "block";
-
-            } catch (err) {
-                errorDiv.innerText = "⚠️ " + err.message;
-                payBtn.disabled = false;
-            }
+            });
         });
     </script>
 

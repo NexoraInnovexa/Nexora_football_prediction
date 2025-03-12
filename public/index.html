@@ -80,7 +80,7 @@
             right: 0;
             width: 40%;
             height: 100vh;
-            background-image: url('/background.jpg');
+            background-image: url('./background.jpg');
             background-size: cover;
             background-position: center;
             opacity: 0.7;
@@ -122,68 +122,6 @@
         .services ul li:hover {
             color: #ffffff;
         }
-
-        /* Media Queries for Mobile Responsiveness */
-        @media screen and (max-width: 768px) {
-            .container {
-                width: 90%;
-                padding: 15px;
-            }
-
-            .image-section {
-                width: 100%;
-                height: 40vh;
-                top: 60%;
-                left: 0;
-                opacity: 0.8;
-            }
-
-            .services {
-                top: 80%;
-                right: 20px;
-                transform: translateY(-50%);
-                padding: 15px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            input, button {
-                font-size: 14px;
-                padding: 10px;
-            }
-        }
-
-        @media screen and (max-width: 480px) {
-            .container {
-                width: 100%;
-                padding: 10px;
-            }
-
-            .image-section {
-                height: 30vh;
-                top: 70%;
-                opacity: 1;
-            }
-
-            .services {
-                top: 90%;
-                right: 10px;
-                transform: translateY(-50%);
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 20px;
-            }
-
-            input, button {
-                font-size: 12px;
-                padding: 8px;
-            }
-        }
-
     </style>
 </head>
 <body>
@@ -205,23 +143,16 @@
             <h3>Prediction Result:</h3>
             <p><strong id="home"></strong> vs <strong id="away"></strong></p>
             <p>Predicted Score: <strong id="score"></strong></p>
+            <p>Predicted Winner: <strong id="winner"></strong></p>
         </div>
-    </div>
-
-    <div class="services">
-        <h2>Explore Other Services</h2>
-        <ul>
-            <li onclick="location.href='https://nexora.com/fake-news-detector'">Nexora Fake News Detector</li>
-            <li onclick="location.href='https://nexora.com/chatbot'">Nexora Chatbot</li>
-            <li onclick="location.href='https://nexora.com/image-to-video'">Nexora Image to Video</li>
-            <li onclick="location.href='https://nexora.com/text-to-video'">Nexora Text to Video</li>
-        </ul>
     </div>
 
     <script>
         const payBtn = document.getElementById("payBtn");
         const errorDiv = document.getElementById("error");
         const predictionDiv = document.getElementById("prediction");
+
+        const API_BASE_URL = "https://nexora-football-backend.onrender.com";
 
         payBtn.addEventListener("click", async () => {
             const email = document.getElementById("email").value;
@@ -238,7 +169,7 @@
 
             // Initialize Flutterwave Payment
             FlutterwaveCheckout({
-                public_key: "FLWPUBK_TEST-72ca1dd35e632a21db39f59869e5dac2-X", // Replace with your Flutterwave public key
+                public_key: "FLWPUBK_TEST-72ca1dd35e632a21db39f59869e5dac2-X", // Replace with your actual public key
                 tx_ref: "TX-" + Date.now(),
                 amount: 4,
                 currency: "USD",
@@ -248,20 +179,25 @@
                 },
                 callback: async function(paymentResponse) {
                     if (paymentResponse.status === "successful") {
-                        // After payment, request prediction
+                        // Payment successful, now fetch prediction
                         try {
-                            const predictionResponse = await fetch("https://nexora-football-backend.onrender.com/predict", {
+                            const predictionResponse = await fetch(`${API_BASE_URL}/predict`, {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam })
                             });
 
+                            if (!predictionResponse.ok) {
+                                throw new Error("Prediction request failed.");
+                            }
+
                             const predictionData = await predictionResponse.json();
 
-                            // Show prediction result
+                            // Display prediction result
                             document.getElementById("home").innerText = predictionData.home_team;
                             document.getElementById("away").innerText = predictionData.away_team;
                             document.getElementById("score").innerText = predictionData.predicted_score;
+                            document.getElementById("winner").innerText = predictionData.predicted_winner;
                             predictionDiv.style.display = "block";
                         } catch (err) {
                             errorDiv.innerText = "⚠️ Prediction failed. Try again.";

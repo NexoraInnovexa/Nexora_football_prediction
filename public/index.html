@@ -4,211 +4,173 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Football Prediction</title>
-  <script src="https://checkout.flutterwave.com/v3.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    /* Base resets and font */
+    body, html {
       margin: 0;
       padding: 0;
-      background-color:rgb(43, 40, 40);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Layout container: prediction panel and sidebar */
+    .wrapper {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
       min-height: 100vh;
-      overflow: hidden;
+      background: #f0f2f5;
     }
-    .container {
+
+    /* Prediction panel styling */
+    .prediction-panel {
       background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      width: 450px;
-      text-align: center;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      position: relative;
-      z-index: 10;
+      padding: 40px 30px;
+      flex: 1;
+      max-width: 500px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
       margin: 20px;
+      border-radius: 10px;
+      z-index: 2;
     }
-    h1 {
-      font-size: 28px;
-      font-weight: bold;
+
+    .prediction-panel h1 {
+      font-size: 32px;
       margin-bottom: 20px;
       color: #333;
+      text-align: center;
     }
-    input, select, button {
+
+    .prediction-panel input,
+    .prediction-panel button {
       width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
+      padding: 14px;
+      margin: 12px 0;
+      border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 16px;
-      background-color: #f8f8f8;
     }
-    button {
-      background-color:rgb(150, 32, 32);
-      color: white;
+
+    .prediction-panel input {
+      background: #fafafa;
+    }
+
+    .prediction-panel button {
+      background: #e63946;
+      color: #fff;
+      border: none;
       cursor: pointer;
-      font-weight: bold;
+      transition: background 0.3s ease;
     }
-    button:disabled {
-      background-color: #6c757d;
-      cursor: not-allowed;
+
+    .prediction-panel button:hover {
+      background: #d62828;
     }
-    .prediction {
+
+    .prediction-panel .error {
+      color: #e63946;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .prediction-panel .result {
       margin-top: 20px;
       padding: 20px;
-      background: #e9ecef;
-      border-radius: 8px;
-      text-align: left;
+      background: #edf2f4;
+      border-radius: 6px;
+      display: none;
     }
-    .error {
-      color: red;
-      margin-top: 10px;
+
+    .prediction-panel .result h3 {
+      margin-top: 0;
+      color: #333;
     }
-    .image-section {
-      position: fixed;
-      top: 0;
-      right: 0;
+
+    /* Sidebar styling */
+    .sidebar {
       width: 40%;
-      height: 100vh;
-      background-image: url('./background.jpg');
-      background-size: cover;
-      background-position: center;
-      opacity: 0.7;
-      z-index: 1;
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 20px;
+      overflow-y: auto;
     }
-    .live-stream .match, .live-stream .live-match, .live-stream .goal {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-        background:rgb(243, 247, 250);
-        
-        
+
+    .sidebar h2 {
+      border-bottom: 2px solid #34495e;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+      font-size: 20px;
     }
-    
-    
+
+    .sidebar .item {
+      background: #34495e;
+      margin-bottom: 12px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .sidebar .item p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .wrapper {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        order: -1;
+      }
+      .prediction-panel {
+        max-width: 100%;
+        margin: 20px 10px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="image-section"></div>
-  <div class="container">
-    <h1>AI Football Prediction</h1>
-
-    <!-- User details and prediction fields -->
-    <input type="email" id="email" placeholder="Your Email" />
-    <input type="text" id="homeTeam" placeholder="Home Team" />
-    <input type="text" id="awayTeam" placeholder="Away Team" />
-    
-    <!-- Subscription Plan Selection -->    
-    <select id="plan">
-      <option value="instant">One-Time ($4)</option>
-      <option value="monthly">Monthly ($17)</option>
-      <option value="yearly">Yearly ($204)</option>
-      <option value="lifetime">Lifetime ($5000)</option>
-    </select>
-    
-    <!-- Access code field for subscribers (will be auto-filled after subscription payment) -->
-    <input type="text" id="accessCode" placeholder="Access Code (for subscribers only)" />
-
-    <!-- Buttons for actions -->    
-    <button id="subscribeBtn">Subscribe / Pay & Generate Access Code</button>
-    <button id="predictBtn">Submit Access Code & Get Prediction</button>
-    <button id="regenerateCode">Regenerate Access Code</button>
-
-    <div class="error" id="error"></div>
-
-    <div class="prediction" id="prediction" style="display: none;">
-      <h3>Prediction Result:</h3>
-      <p><strong id="home"></strong> vs <strong id="away"></strong></p>
-      <p>Predicted Score: <strong id="score"></strong></p>
-      <p>Predicted Winner: <strong id="winner"></strong></p>
+  <div class="wrapper">
+    <!-- Prediction Panel -->
+    <div class="prediction-panel">
+      <h1>AI Football Prediction</h1>
+      <input type="email" id="email" placeholder="Your Email" />
+      <input type="text" id="homeTeam" placeholder="Home Team" />
+      <input type="text" id="awayTeam" placeholder="Away Team" />
+      <button id="predictBtn">Get Prediction</button>
+      <div class="error" id="error"></div>
+      <div class="result" id="prediction">
+        <h3>Prediction Result:</h3>
+        <p><strong id="home"></strong> vs <strong id="away"></strong></p>
+        <p>Predicted Winner: <strong id="winner"></strong></p>
+        <p>Confidence: <strong id="confidence"></strong></p>
+      </div>
     </div>
-  </div>
 
-  <div class="live-stream">
-    <h2>Upcoming Fixtures</h2>
-    <div id="fixtures"></div>
+    <!-- Sidebar for fixtures, live matches, goal scorers -->
+    <div class="sidebar">
+      <h2>Upcoming Fixtures</h2>
+      <div id="fixtures"></div>
 
-    <h2>Live Matches</h2>
-    <div id="live-matches"></div>
+      <h2>Live Matches</h2>
+      <div id="live-matches"></div>
 
-    <h2>Goal Scorers</h2>
-    <div id="goal-scorers"></div>
+      <h2>Goal Scorers</h2>
+      <div id="goal-scorers"></div>
+    </div>
   </div>
 
   <script>
     const API_BASE_URL = "https://nexora-football-backend.onrender.com";
-    const subscribeBtn = document.getElementById("subscribeBtn");
     const predictBtn = document.getElementById("predictBtn");
-    const regenerateCodeBtn = document.getElementById("regenerateCode");
     const errorDiv = document.getElementById("error");
     const predictionDiv = document.getElementById("prediction");
 
-    // Pricing for each plan
-    const priceMap = {
-      instant: 4,
-      monthly: 17,
-      yearly: 204,
-      lifetime: 5000
-    };
-
-    // Handle subscription payment and generate access code
-    subscribeBtn.addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const plan = document.getElementById("plan").value;
-      const homeTeam = document.getElementById("homeTeam").value;
-      const awayTeam = document.getElementById("awayTeam").value;
-      
-      if (!email || !homeTeam || !awayTeam) {
-        errorDiv.innerText = "⚠️ Please fill in all fields.";
-        return;
-      }
-      
-      subscribeBtn.disabled = true;
-      errorDiv.innerText = "";
-      
-      // Initiate payment using Flutterwave
-      FlutterwaveCheckout({
-        public_key: "FLWPUBK_TEST-72ca1dd35e632a21db39f59869e5dac2-X",
-        tx_ref: "TX-" + Date.now(),
-        amount: priceMap[plan],
-        currency: "USD",
-        customer: { email: email },
-        callback: async function(paymentResponse) {
-          if (paymentResponse.status === "successful") {
-            // After successful payment, generate access code for subscriptions (for instant, access_code is not required)
-            if (plan !== "instant") {
-              try {
-                const response = await fetch(`${API_BASE_URL}/generate_access`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email, plan })
-                });
-                if (!response.ok) throw new Error("Failed to generate access code.");
-                const data = await response.json();
-                document.getElementById("accessCode").value = data.access_code;
-                errorDiv.innerText = `✅ Subscription successful! Access code: ${data.access_code}. Expires: ${data.expires_at}`;
-              } catch (err) {
-                errorDiv.innerText = "⚠️ Failed to generate access code.";
-              }
-            } else {
-              errorDiv.innerText = "✅ Payment successful! You can now get your prediction.";
-            }
-          } else {
-            errorDiv.innerText = "⚠️ Payment failed!";
-          }
-          subscribeBtn.disabled = false;
-        },
-        onclose: function() { subscribeBtn.disabled = false; }
-      });
-    });
-  
-    // Submit access code and predict (for subscribers or one-time users)
+    // Submit prediction request
     predictBtn.addEventListener("click", async () => {
       const email = document.getElementById("email").value;
       const homeTeam = document.getElementById("homeTeam").value;
       const awayTeam = document.getElementById("awayTeam").value;
-      const accessCode = document.getElementById("accessCode").value;
   
-      if (!email || !homeTeam || !awayTeam || !accessCode) {
+      if (!email || !homeTeam || !awayTeam) {
         errorDiv.innerText = "⚠️ Please fill in all required fields.";
         return;
       }
@@ -220,7 +182,7 @@
         const response = await fetch(`${API_BASE_URL}/predict`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam, access_code: accessCode })
+          body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam })
         });
   
         if (!response.ok) throw new Error("Prediction failed.");
@@ -228,152 +190,107 @@
   
         document.getElementById("home").innerText = data.home_team;
         document.getElementById("away").innerText = data.away_team;
-        document.getElementById("score").innerText = data.predicted_score || "N/A";
         document.getElementById("winner").innerText = data.predicted_winner;
+        document.getElementById("confidence").innerText = data.confidence;
         predictionDiv.style.display = "block";
       } catch (err) {
-        errorDiv.innerText = "⚠️ Prediction failed. Check your access code or subscription.";
+        errorDiv.innerText = "⚠️ Prediction failed. Please try again.";
       }
       predictBtn.disabled = false;
     });
   
-    // Regenerate access code (for subscribers who lost their code)
-    regenerateCodeBtn.addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      if (!email) {
-        errorDiv.innerText = "⚠️ Please enter your email to regenerate your access code.";
-        return;
-      }
-      regenerateCodeBtn.disabled = true;
-      errorDiv.innerText = "";
-  
-      try {
-        const response = await fetch(`${API_BASE_URL}/regenerate_access`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
-        });
-  
-        if (!response.ok) throw new Error("Regeneration failed.");
-        const data = await response.json();
-  
-        document.getElementById("accessCode").value = data.access_code;
-        errorDiv.innerText = `✅ New access code generated: ${data.access_code}`;
-      } catch (err) {
-        errorDiv.innerText = "⚠️ Failed to regenerate access code.";
-      }
-      regenerateCodeBtn.disabled = false;
-    });
-
-
+    // API-Football settings for fixtures, live matches, goal scorers
     const apiKey = "f1596dd16599603e19bba20ba952abdb";  // Replace with your API key
-    const leagueId = 39;  // Premier League (Change this to your preferred league)
+    const leagueId = 39;  // Premier League (or your preferred league)
     const season = 2024; // Current season
     
     async function getFixtures() {
-        try {
-            const response = await fetch(`https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}`, {
-                method: "GET",
-                headers: {
-                    "x-apisports-key": apiKey
-                }
-            });
-    
-            const data = await response.json();
-            displayFixtures(data.response);
-        } catch (error) {
-            console.error("Error fetching fixtures:", error);
-        }
+      try {
+        const response = await fetch(`https://v3.football.api-sports.io/fixtures?league=${leagueId}&season=${season}`, {
+          method: "GET",
+          headers: { "x-apisports-key": apiKey }
+        });
+        const data = await response.json();
+        displayFixtures(data.response);
+      } catch (error) {
+        console.error("Error fetching fixtures:", error);
+      }
     }
     
     function displayFixtures(fixtures) {
-        const fixtureContainer = document.getElementById("fixtures");
-        fixtureContainer.innerHTML = ""; // Clear previous data
-    
-        fixtures.forEach(match => {
-            const matchElement = document.createElement("div");
-            matchElement.classList.add("match");
-    
-            matchElement.innerHTML = `
-                <p><strong>${match.teams.home.name}</strong> vs <strong>${match.teams.away.name}</strong></p>
-                <p>Date: ${new Date(match.fixture.date).toLocaleString()}</p>
-            `;
-    
-            fixtureContainer.appendChild(matchElement);
-        });
+      const fixtureContainer = document.getElementById("fixtures");
+      fixtureContainer.innerHTML = "";
+      fixtures.forEach(match => {
+        const matchElement = document.createElement("div");
+        matchElement.classList.add("item");
+        matchElement.innerHTML = `
+          <p><strong>${match.teams.home.name}</strong> vs <strong>${match.teams.away.name}</strong></p>
+          <p>${new Date(match.fixture.date).toLocaleString()}</p>
+        `;
+        fixtureContainer.appendChild(matchElement);
+      });
     }
     
-    // Call the function on page load
-    getFixtures();
     async function getLiveMatches() {
-        try {
-            const response = await fetch(`https://v3.football.api-sports.io/fixtures?live=all`, {
-                method: "GET",
-                headers: {
-                    "x-apisports-key": apiKey
-                }
-            });
-    
-            const data = await response.json();
-            displayLiveMatches(data.response);
-        } catch (error) {
-            console.error("Error fetching live matches:", error);
-        }
+      try {
+        const response = await fetch(`https://v3.football.api-sports.io/fixtures?live=all`, {
+          method: "GET",
+          headers: { "x-apisports-key": apiKey }
+        });
+        const data = await response.json();
+        displayLiveMatches(data.response);
+      } catch (error) {
+        console.error("Error fetching live matches:", error);
+      }
     }
     
     function displayLiveMatches(matches) {
-        const liveContainer = document.getElementById("live-matches");
-        liveContainer.innerHTML = ""; 
-    
-        matches.forEach(match => {
-            const matchElement = document.createElement("div");
-            matchElement.classList.add("live-match");
-    
-            matchElement.innerHTML = `
-                <p><strong>${match.teams.home.name}</strong> (${match.goals.home}) - (${match.goals.away}) <strong>${match.teams.away.name}</strong></p>
-                <p>Status: ${match.fixture.status.long}</p>
-            `;
-    
-            liveContainer.appendChild(matchElement);
-        });
+      const liveContainer = document.getElementById("live-matches");
+      liveContainer.innerHTML = "";
+      matches.forEach(match => {
+        const matchElement = document.createElement("div");
+        matchElement.classList.add("item");
+        matchElement.innerHTML = `
+          <p><strong>${match.teams.home.name}</strong> (${match.goals.home || 0}) - (${match.goals.away || 0}) <strong>${match.teams.away.name}</strong></p>
+          <p>${match.fixture.status.long}</p>
+        `;
+        liveContainer.appendChild(matchElement);
+      });
     }
     
-    // Refresh live matches every 30 seconds
-    setInterval(getLiveMatches, 30000);
     async function getGoalScorers(fixtureId) {
-        try {
-            const response = await fetch(`https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`, {
-                method: "GET",
-                headers: {
-                    "x-apisports-key": apiKey
-                }
-            });
-    
-            const data = await response.json();
-            displayGoalScorers(data.response);
-        } catch (error) {
-            console.error("Error fetching goal scorers:", error);
-        }
+      try {
+        const response = await fetch(`https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`, {
+          method: "GET",
+          headers: { "x-apisports-key": apiKey }
+        });
+        const data = await response.json();
+        displayGoalScorers(data.response);
+      } catch (error) {
+        console.error("Error fetching goal scorers:", error);
+      }
     }
     
     function displayGoalScorers(events) {
-        const scorersContainer = document.getElementById("goal-scorers");
-        scorersContainer.innerHTML = ""; 
-    
-        events.forEach(event => {
-            if (event.type === "Goal") {
-                const eventElement = document.createElement("div");
-                eventElement.classList.add("goal");
-    
-                eventElement.innerHTML = `
-                    <p>${event.player.name} scored for ${event.team.name} at ${event.time.elapsed}'</p>
-                `;
-    
-                scorersContainer.appendChild(eventElement);
-            }
-        });
+      const scorersContainer = document.getElementById("goal-scorers");
+      scorersContainer.innerHTML = "";
+      events.forEach(event => {
+        if (event.type === "Goal") {
+          const eventElement = document.createElement("div");
+          eventElement.classList.add("item");
+          eventElement.innerHTML = `
+            <p>${event.player.name} scored for ${event.team.name} at ${event.time.elapsed}'</p>
+          `;
+          scorersContainer.appendChild(eventElement);
+        }
+      });
     }
-         
+    
+    // Initialize fixtures and live matches on page load
+    getFixtures();
+    getLiveMatches();
+    // Refresh live matches every 30 seconds
+    setInterval(getLiveMatches, 30000);
   </script>
 </body>
 </html>

@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Football Prediction</title>
   <style>
-    /* Base resets and font */
+    /* Base resets and fonts */
     body, html {
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-
+    
     /* Layout container: prediction panel and sidebar */
     .wrapper {
       display: flex;
       min-height: 100vh;
       background: #f0f2f5;
     }
-
+    
     /* Prediction panel styling */
     .prediction-panel {
       background: #fff;
@@ -29,15 +29,16 @@
       margin: 20px;
       border-radius: 10px;
       z-index: 2;
+      position: relative;
     }
-
+    
     .prediction-panel h1 {
       font-size: 32px;
       margin-bottom: 20px;
       color: #333;
       text-align: center;
     }
-
+    
     .prediction-panel input,
     .prediction-panel button {
       width: 100%;
@@ -47,11 +48,11 @@
       border: 1px solid #ccc;
       font-size: 16px;
     }
-
+    
     .prediction-panel input {
       background: #fafafa;
     }
-
+    
     .prediction-panel button {
       background: #e63946;
       color: #fff;
@@ -59,17 +60,17 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
+    
     .prediction-panel button:hover {
       background: #d62828;
     }
-
+    
     .prediction-panel .error {
       color: #e63946;
       margin-top: 10px;
       text-align: center;
     }
-
+    
     .prediction-panel .result {
       margin-top: 20px;
       padding: 20px;
@@ -77,12 +78,29 @@
       border-radius: 6px;
       display: none;
     }
-
+    
     .prediction-panel .result h3 {
       margin-top: 0;
       color: #333;
     }
-
+    
+    /* Loader styling */
+    .loader {
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #e63946;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      display: none;
+      margin: 10px auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
     /* Sidebar styling */
     .sidebar {
       width: 40%;
@@ -91,26 +109,26 @@
       padding: 20px;
       overflow-y: auto;
     }
-
+    
     .sidebar h2 {
       border-bottom: 2px solid #34495e;
       padding-bottom: 8px;
       margin-bottom: 15px;
       font-size: 20px;
     }
-
+    
     .sidebar .item {
       background: #34495e;
       margin-bottom: 12px;
       padding: 10px;
       border-radius: 4px;
     }
-
+    
     .sidebar .item p {
       margin: 5px 0;
       font-size: 14px;
     }
-
+    
     /* Responsive adjustments */
     @media (max-width: 900px) {
       .wrapper {
@@ -136,6 +154,8 @@
       <input type="text" id="homeTeam" placeholder="Home Team" />
       <input type="text" id="awayTeam" placeholder="Away Team" />
       <button id="predictBtn">Get Prediction</button>
+      <!-- Loader element -->
+      <div class="loader" id="loader"></div>
       <div class="error" id="error"></div>
       <div class="result" id="prediction">
         <h3>Prediction Result:</h3>
@@ -163,6 +183,16 @@
     const predictBtn = document.getElementById("predictBtn");
     const errorDiv = document.getElementById("error");
     const predictionDiv = document.getElementById("prediction");
+    const loader = document.getElementById("loader");
+
+    // Show loader while prediction is being fetched
+    function showLoader() {
+      loader.style.display = "block";
+    }
+
+    function hideLoader() {
+      loader.style.display = "none";
+    }
 
     // Submit prediction request
     predictBtn.addEventListener("click", async () => {
@@ -177,6 +207,8 @@
   
       predictBtn.disabled = true;
       errorDiv.innerText = "";
+      predictionDiv.style.display = "none";
+      showLoader();
   
       try {
         const response = await fetch(`${API_BASE_URL}/predict`, {
@@ -196,6 +228,7 @@
       } catch (err) {
         errorDiv.innerText = "⚠️ Prediction failed. Please try again.";
       }
+      hideLoader();
       predictBtn.disabled = false;
     });
   

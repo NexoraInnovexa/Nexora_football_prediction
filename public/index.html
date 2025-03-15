@@ -185,7 +185,7 @@
           body: JSON.stringify({ email, home_team: homeTeam, away_team: awayTeam })
         });
   
-        if (!response.ok) throw new Error("Prediction failed.");
+        if (!response.ok) throw new Error("No match found.");
         const data = await response.json();
   
         document.getElementById("home").innerText = data.home_team;
